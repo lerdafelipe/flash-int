@@ -1,19 +1,19 @@
 Construir un pequeño juego tipo “ahorcado”/”hangman”
 
 Requisitos mínimos
-- [ ] Mostrar una palabra oculta con guiones, por ejemplo: _ _ _ _
-- [ ] Elegir la palabra aleatoriamente de una lista predefinida.
-- [ ] Cuando el usuario hace clic en una letra:
-- [ ] Si la letra está en la palabra → se revela en la posición correcta.
-- [ ] Si la letra no está → se descuenta un intento.
-- [ ] Mostrar las letras ya usadas.
-- [ ] Mostrar un mensaje final: “Ganaste” / “Perdiste”.
-- [ ] Botón de reinicio para empezar una nueva partida.
+- [x] Mostrar una palabra oculta con guiones, por ejemplo: _ _ _ _
+- [x] Elegir la palabra aleatoriamente de una lista predefinida.
+- [x] Cuando el usuario hace clic en una letra:
+- [x] Si la letra está en la palabra → se revela en la posición correcta.
+- [x] Si la letra no está → se descuenta un intento.
+- [x] Mostrar las letras ya usadas.
+- [x] Mostrar un mensaje final: “Ganaste” / “Perdiste”.
+- [x] Botón de reinicio para empezar una nueva partida.
 
 Bonus (opcionales, según tiempo)
-Animaciones al revelar letras o al mostrar el mensaje de victoria/derrota.
-Contador visual de intentos (por ejemplo, corazones que se van perdiendo).
-Guardar el estado del juego en localStorage para que al refrescar la página se mantenga.
-Obtener la palabra desde una API en lugar de usar una lista local.
-Permitir jugar también con el teclado físico, no solo clics.
-(Sólo si sobra mucho tiempo) Extender el juego con cosas como leaderboard, chat entre jugadores, etc. — puede ser solo a nivel idea/diseño o una implementación simple.
+- [ ] Animaciones al revelar letras o al mostrar el mensaje de victoria/derrota.
+- [x] Contador visual de intentos (por ejemplo, corazones que se van perdiendo).
+- [x] Guardar el estado del juego en localStorage para que al refrescar la página se mantenga.
+- [ ] Obtener la palabra desde una API en lugar de usar una lista local.
+- [x] Permitir jugar también con el teclado físico, no solo clics.
+- [ ] (Sólo si sobra mucho tiempo) Extender el juego con cosas como leaderboard, chat entre jugadores, etc. — puede ser solo a nivel idea/diseño o una implementación simple.

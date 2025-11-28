@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-const listOfWords =[
+// Constants
+const listOfWords = [
   "EXAMPLE",
   "SAMPLEE",
   "DEMOO",
@@ -10,22 +11,33 @@ const listOfWords =[
   "WORDLEE",
   "PUZZLE",
   "GAMING"
-]
+];
 
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const INITIAL_TRIES = 3;
 
-const getRandomNumber = (max: number) => {
+// Utility Functions
+const getRandomNumber = (max: number): number => {
   return Math.floor(Math.random() * max);
-}
+};
 
+const getRandomWord = (): string => {
+  return listOfWords[getRandomNumber(listOfWords.length)];
+};
+
+// Main Component
 export default function Home() {
-  const [chosenWord, setChosenWord] = useState<string>(listOfWords[getRandomNumber(listOfWords.length)]);
-  const [guessedLetters, setGuessedLetters] = useState<Array<string>>(new Array(chosenWord.length).fill(""));
+  // State Management
+  const [chosenWord, setChosenWord] = useState<string>(getRandomWord());
+  const [guessedLetters, setGuessedLetters] = useState<Array<string>>(
+    new Array(chosenWord.length).fill("")
+  );
   const [usedLetters, setUsedLetters] = useState<Set<string>>(new Set());
-  const [tries, setTries] = useState<number>(3);
+  const [tries, setTries] = useState<number>(INITIAL_TRIES);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [hasWon, setHasWon] = useState<boolean>(false);
 
+  // Local Storage Functions
   const saveStateToLocalStorage = (gameState: {
     chosenWord: string;
     guessedLetters: Array<string>;
@@ -35,74 +47,78 @@ export default function Home() {
     hasWon: boolean;
   }) => {
     localStorage.setItem("hangmanGameState", JSON.stringify(gameState));
-  }
+  };
 
+
+
+  // Game Logic Functions
   const resetGame = () => {
-    const newWord = listOfWords[getRandomNumber(listOfWords.length)];
+    const newWord = getRandomWord();
+    const initialGuessedLetters = new Array(newWord.length).fill("");
+    
     setChosenWord(newWord);
-    setGuessedLetters(new Array(newWord.length).fill(""));
+    setGuessedLetters(initialGuessedLetters);
     setUsedLetters(new Set());
-    setTries(3);
+    setTries(INITIAL_TRIES);
     setIsGameOver(false);
     setHasWon(false);
+    
     saveStateToLocalStorage({
       chosenWord: newWord,
-      guessedLetters: new Array(newWord.length).fill(""),
+      guessedLetters: initialGuessedLetters,
       usedLetters: [],
-      tries: 3,
+      tries: INITIAL_TRIES,
       isGameOver: false,
       hasWon: false
     });
-  }
+  };
 
   const pressKey = (key: string) => {
+    // Prevent duplicate guesses
     if (usedLetters.has(key)) return;
+    
+    // Validate input is a single letter
+    if (!/^[A-Z]$/.test(key)) return;
 
-    if (/^[A-Z]$/.test(key)) {
-
-      if (!chosenWord.includes(key)) { 
-        if (tries == 1) setIsGameOver(true)
-        setTries((prevTries) => prevTries - 1);
-      }
-
-      setGuessedLetters((prevLetters) => {
-        const newLetters = [...prevLetters];
-        for (let i = 0; i < chosenWord.length; i++) {
-          // Fill all occurrences of the letter
-          if (chosenWord[i] === key) {
-            newLetters[i] = key;
-          }
-        }
-        if (!newLetters.includes("")) {
-          setIsGameOver(true);
-          setHasWon(true);
-        }
-        return newLetters;
-      });
-
-      if(!usedLetters.has(key)) {
-        setUsedLetters((prevUsed) => new Set(prevUsed).add(key));
+    // Check if letter is in the word
+    const isCorrectGuess = chosenWord.includes(key);
+    
+    // Handle incorrect guess
+    if (!isCorrectGuess) {
+      const newTries = tries - 1;
+      setTries(newTries);
+      
+      if (newTries === 0) {
+        setIsGameOver(true);
       }
     }
-  }
 
-  useEffect(() => {
-    if (isGameOver) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const key = event.key.toUpperCase();
-      pressKey(key);
+    // Update guessed letters
+    setGuessedLetters((prevLetters) => {
+      const newLetters = [...prevLetters];
       
-    };
+      for (let i = 0; i < chosenWord.length; i++) {
+        if (chosenWord[i] === key) {
+          newLetters[i] = key;
+        }
+      }
+      
+      // Check if player has won
+      if (!newLetters.includes("")) {
+        setIsGameOver(true);
+        setHasWon(true);
+      }
+      
+      return newLetters;
+    });
 
-    window.addEventListener("keydown", handleKeyDown);
+    // Mark letter as used
+    setUsedLetters((prevUsed) => new Set(prevUsed).add(key));
+  };
 
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [tries, chosenWord, usedLetters, isGameOver, guessedLetters]);
-
+  // Effects
   useEffect(() => {
-    const getStateFromLocalStorage = () => {
+    const getItemsFromLocalStorage = () => {
       const savedState = localStorage.getItem("hangmanGameState");
       if (savedState) {
         const {
@@ -113,6 +129,7 @@ export default function Home() {
           isGameOver,
           hasWon
         } = JSON.parse(savedState);
+        
         setChosenWord(chosenWord);
         setGuessedLetters(guessedLetters);
         setUsedLetters(new Set(usedLetters));
@@ -122,7 +139,7 @@ export default function Home() {
       }
     }
 
-    getStateFromLocalStorage();
+    getItemsFromLocalStorage();
   }, []);
 
   useEffect(() => {
@@ -135,71 +152,109 @@ export default function Home() {
       hasWon
     });
   }, [chosenWord, guessedLetters, usedLetters, tries, isGameOver, hasWon]);
-  
-  return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <div className="mb-30">
-        <p>{chosenWord}</p>
-        <p>vidas: {tries}</p>
-      </div>
-      {isGameOver
-        ? <div className="text-center">
-            {hasWon ? <p> Ganaste!</p> : <p> Perdiste!</p>}
-            <button
-              type="button"
-              className="mt-4 rounded bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-600"
-              onClick={resetGame}
-            >
-              Empezar nuevamente
-            </button>
-        </div>
-        : <>
-            <div className="flex items-end gap-4">
-              {guessedLetters.map((letter, index) => (
-                <span
-                  key={index}
-                  className="animate-wave inline-block text-6xl font-bold text-zinc-900 dark:text-zinc-100"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {letter || "_"}
-                </span>
-              ))}
-            </div>
 
-            <div className="mt-10 grid grid-cols-7 gap-2">
-              {alphabet.map((letter) => (
+  useEffect(() => {
+    if (isGameOver) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const key = event.key.toUpperCase();
+      pressKey(key);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [tries, chosenWord, usedLetters, isGameOver, guessedLetters]);
+
+  // Render
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      {/* Debug Info (hidden in production) */}
+      <div className="mb-8 text-center">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          Palabra: {chosenWord}
+        </p>
+        <p className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
+          Vidas: {tries}
+        </p>
+      </div>
+
+      {/* Game Over Screen */}
+      {isGameOver ? (
+        <div className="text-center">
+          <h2 className="mb-4 text-4xl font-bold text-zinc-900 dark:text-zinc-100">
+            {hasWon ? "¡Ganaste! 🎉" : "¡Perdiste! 😢"}
+          </h2>
+          <p className="mb-6 text-xl text-zinc-600 dark:text-zinc-400">
+            La palabra era: <span className="font-bold">{chosenWord}</span>
+          </p>
+          <button
+            type="button"
+            className="rounded bg-blue-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-600"
+            onClick={resetGame}
+          >
+            Empezar nuevamente
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Word Display */}
+          <div className="mb-12 flex items-end gap-4">
+            {guessedLetters.map((letter, index) => (
+              <span
+                key={index}
+                className="inline-block text-6xl font-bold text-zinc-900 transition-all dark:text-zinc-100"
+              >
+                {letter || "_"}
+              </span>
+            ))}
+          </div>
+
+          {/* Keyboard */}
+          <div className="mb-12 grid grid-cols-7 gap-2">
+            {alphabet.map((letter) => {
+              const isUsed = usedLetters.has(letter);
+              
+              return (
                 <button
                   key={letter}
-                  className={`inline-block rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 ${
-                    usedLetters.has(letter)
-                      ? "bg-zinc-400 dark:bg-zinc-700"
-                      : "bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 cursor-pointer"
+                  className={`rounded px-4 py-2 font-semibold transition-colors ${
+                    isUsed
+                      ? "cursor-not-allowed bg-zinc-400 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-500"
+                      : "cursor-pointer bg-zinc-200 text-zinc-900 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                   }`}
-                  disabled={usedLetters.has(letter)}
+                  disabled={isUsed}
                   onClick={() => pressKey(letter)}
                 >
                   {letter}
                 </button>
-              ))}
-
-            </div>
-          </>
-      }
-
-      <div className="mt-30">
-        <p>Letras usadas:</p>
-        <div className="flex gap-2 mt-2">
-          {[...usedLetters].map((letter, index) => (
-            <span
-              key={index}
-              className="inline-block rounded bg-zinc-200 px-2 py-1 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-            >
-              {letter}
-            </span>
-          ))}
+              );
+            })}
           </div>
 
-      </div>
+          {/* Used Letters Display */}
+          <div className="text-center">
+            <p className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              Letras usadas:
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {[...usedLetters].length > 0 ? (
+                [...usedLetters].map((letter, index) => (
+                  <span
+                    key={index}
+                    className="inline-block rounded bg-zinc-200 px-3 py-1 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                  >
+                    {letter}
+                  </span>
+                ))
+              ) : (
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Ninguna todavía
+                </span>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

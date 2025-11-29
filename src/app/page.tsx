@@ -28,14 +28,13 @@ const getRandomWord = (): string => {
 // Main Component
 export default function Home() {
   // State Management
-  const [chosenWord, setChosenWord] = useState<string>(getRandomWord());
-  const [guessedLetters, setGuessedLetters] = useState<Array<string>>(
-    new Array(chosenWord.length).fill("")
-  );
+  const [chosenWord, setChosenWord] = useState<string>("");
+  const [guessedLetters, setGuessedLetters] = useState<Array<string>>([]);
   const [usedLetters, setUsedLetters] = useState<Set<string>>(new Set());
   const [tries, setTries] = useState<number>(INITIAL_TRIES);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [hasWon, setHasWon] = useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   // Local Storage Functions
   const saveStateToLocalStorage = (gameState: {
@@ -136,13 +135,21 @@ export default function Home() {
         setTries(tries);
         setIsGameOver(isGameOver);
         setHasWon(hasWon);
+      } else {
+        // Si no hay estado guardado, iniciar nuevo juego
+        const newWord = getRandomWord();
+        setChosenWord(newWord);
+        setGuessedLetters(new Array(newWord.length).fill(""));
       }
+      setIsLoaded(true);
     }
 
     getItemsFromLocalStorage();
   }, []);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    
     saveStateToLocalStorage({
       chosenWord,
       guessedLetters,
@@ -151,7 +158,7 @@ export default function Home() {
       isGameOver,
       hasWon
     });
-  }, [chosenWord, guessedLetters, usedLetters, tries, isGameOver, hasWon]);
+  }, [chosenWord, guessedLetters, usedLetters, tries, isGameOver, hasWon, isLoaded]);
 
   useEffect(() => {
     if (isGameOver) return;
@@ -166,6 +173,14 @@ export default function Home() {
   }, [tries, chosenWord, usedLetters, isGameOver, guessedLetters]);
 
   // Render
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
+        <p className="text-zinc-500 dark:text-zinc-400">Cargando...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       {/* Debug Info (hidden in production) */}
